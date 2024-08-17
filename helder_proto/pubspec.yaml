@@ -1,0 +1,62 @@
+name: helder_proto
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  permission_handler: ^11.3.1
+  async: ^2.11.0
+  stream_transform: ^2.1.0
+
+  google_mlkit_text_recognition: ^0.13.0
+
+  http: ^1.1.0
+  intl: ^0.19.0
+  logger: ^2.0.1
+  url_launcher: ^6.1.12
+
+  cupertino_icons: ^1.0.6
+
+  get: ^4.6.5
+  get_storage: ^2.1.1
+  camera: ^0.11.0+1
+
+  image: ^4.0.17
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/fonts/
+    - assets/images/
+    - assets/icons/
+
+  fonts:
+    - family: Rota
+      fonts:
+        - asset: assets/fonts/Rota-Regular.otf
+        - asset: assets/fonts/Rota-Thin.otf
+          weight: 100
+        - asset: assets/fonts/Rota-ExtraLight.otf
+          weight: 200
+        - asset: assets/fonts/Rota-Light.otf
+          weight: 300
+        - asset: assets/fonts/Rota-ExtraBold.otf
+          weight: 700
+        - asset: assets/fonts/Rota-ExtraBlack.otf
+          weight: 800
