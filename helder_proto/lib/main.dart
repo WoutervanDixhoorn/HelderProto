@@ -7,18 +7,6 @@ import 'package:helder_proto/features/agreement/screens/agreement.dart';
 void main() {
   runApp(const HelderApp());
 }
-  
-// class HelderApp extends StatelessWidget {
-//   const HelderApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const GetMaterialApp(
-//       title: 'Helder',
-//       home: AgreementScreen(),
-//     );
-//   }
-// }
 
 class HelderApp extends StatelessWidget {
   const HelderApp({super.key});
