@@ -55,9 +55,9 @@ class NavigationMenu extends StatelessWidget {
         if(value == 0){
           Get.to(() => const ScannerScreen())
         }else if(value == 1){
-          Get.to(() => const ResultScreen(text: "Navigation test"))
+          Get.to(() => const ResultScreen())
         }else if(value == 2){
-          Get.to(() => const ResultScreen(text: "Navigation test"))
+          Get.to(() => const ResultScreen())
         }
       },
       showSelectedLabels: false,

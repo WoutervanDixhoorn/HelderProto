@@ -1,41 +1,65 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:helder_proto/features/scanner/controllers/api_controller.dart';
+import 'package:helder_proto/common/widgets/info_card.dart';
 import 'package:helder_proto/features/templates/header_page.dart';
+import 'package:helder_proto/models/helder_api_data.dart';
+import 'package:helder_proto/providers/verhelder_provider.dart';
+import 'package:provider/provider.dart';
 
 class ResultScreen extends StatefulWidget {
-  final String text;
+  final String letterContent;
 
-  const ResultScreen({super.key, required this.text});
+  const ResultScreen({super.key, this.letterContent = ''});
 
   @override
-  State<ResultScreen> createState() => _ResultState();
+  State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultState extends State<ResultScreen> {
-  String? _processedText; // To store the processed text
-  bool _isLoading = true; // To keep track of loading state
+class _ResultScreenState extends State<ResultScreen> {
 
   @override
   void initState() {
-    _fetchProcessedText();
-    super.initState();
-  }
+    final provider = Provider.of<VerhelderProvider>(context, listen: false);
+    if(widget.letterContent.isNotEmpty){
+      provider.processLetterWithProxy(widget.letterContent);
+    }
 
-  Future<void> _fetchProcessedText() async {
-    String processedText = await ApiController.processLetter(widget.text);
-    setState(() {
-      _processedText = processedText;
-      _isLoading = false; // Loading is done
-    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<VerhelderProvider>(context);
     return HeaderPageNav(
       currentIndex: 1,
-        child: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // Show loading indicator while loading
-          : SingleChildScrollView(child: Text(_processedText ?? ''))
+      child: provider.isLoading 
+      ? getLoadingUI() 
+      : provider.error.isNotEmpty 
+        ? getErrorUI(provider.error) 
+        : getBodyUI(provider.helderData)
+    );
+  }
+
+  getLoadingUI() {
+    return const Center(
+      child: CircularProgressIndicator()
+    );
+  }
+
+  getErrorUI(String error) {
+    return Center(
+      child: InfoCard(
+        text: error,
+      ),
+    );
+  }
+
+  getBodyUI(HelderApiData data) {
+    return Center(
+      child: InfoCard(
+        text: data.reason,
+      ),
     );
   }
 }

@@ -82,7 +82,7 @@ class ScannerController extends GetxController with WidgetsBindingObserver {
       final file = File(pictureFile.path);
       final recognizedText = await ocrController.extractTextFromFile(file);
 
-      Get.to(() => ResultScreen(text: recognizedText));
+      Get.to(() => ResultScreen(letterContent: recognizedText));
     } catch (e) {
       Get.snackbar('Error', 'An error occurred when scanning text');
     }
