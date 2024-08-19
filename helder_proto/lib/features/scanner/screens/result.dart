@@ -1,9 +1,9 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:helder_proto/common/widgets/helder_payment_card.dart';
 import 'package:helder_proto/common/widgets/info_card.dart';
 import 'package:helder_proto/features/templates/header_page.dart';
-import 'package:helder_proto/models/helder_api_data.dart';
+import 'package:helder_proto/models/helder_invoice.dart';
+import 'package:helder_proto/models/helder_letter.dart';
 import 'package:helder_proto/providers/verhelder_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -55,11 +55,9 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  getBodyUI(HelderApiData data) {
-    return Center(
-      child: InfoCard(
-        text: data.reason,
-      ),
+  getBodyUI(HelderInvoice data) {
+    return HelderPaymentCard(
+      helderData: data,
     );
   }
 }

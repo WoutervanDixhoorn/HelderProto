@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 //Colors
-abstract final class HelderColors {
+final class HelderColors {
   static const Color white = Color(0xFFF6F6F6);
   static const Color darkGrey = Color(0xFF373737);
   static const Color lightGrey = Color(0xFFEBEBEB);

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:helder_proto/models/helder_invoice.dart';
+import 'package:helder_proto/models/helder_letter.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:helder_proto/models/helder_api_data.dart';
 
 class VerhelderProvider extends ChangeNotifier {
 
@@ -16,16 +17,18 @@ class VerhelderProvider extends ChangeNotifier {
 
   bool isLoading = true;
   String error = '';
-  HelderApiData helderData = HelderApiData.empty();
+  HelderInvoice helderData = HelderInvoice.empty();
+
+  _resetWidget() async {
+    isLoading = true;
+    error = '';
+    helderData = HelderInvoice.empty();
+    notifyListeners();
+  }
 
   processLetterWithProxy(String completeLetter) async {
-    //Reset widget when calling api
-    Future.microtask(() {
-      isLoading = true;
-      error = '';
-      helderData = HelderApiData.empty();
-      notifyListeners();
-    });
+    
+    Future.microtask(_resetWidget);
 
     try {
       var response = await http.post(
@@ -37,7 +40,7 @@ class VerhelderProvider extends ChangeNotifier {
       );
 
       if(response.statusCode == 200) {
-        helderData = helderDataFromJson(completeLetter, response.body);
+        helderData = helderInvoiceFromJson(completeLetter, response.body);
       } else {
         error = response.statusCode.toString();
       }
