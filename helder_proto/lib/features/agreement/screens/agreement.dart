@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:helder_proto/common/widgets/helder_buttons.dart';
+import 'package:helder_proto/common/widgets/helder_header_screen.dart';
 import 'package:helder_proto/features/agreement/controllers/agreement_controller.dart';
-import 'package:helder_proto/features/templates/header_page.dart';
 import 'package:helder_proto/common/styles/text_styles.dart';
 import 'package:helder_proto/common/widgets/info_card.dart';
 import 'package:helder_proto/utils/constants/text_strings.dart';
@@ -13,6 +13,7 @@ class AgreementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context){
     return const HeaderPage(
+      title: "Helder",
       child: Agreement(),
     );
   }

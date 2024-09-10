@@ -1,32 +1,50 @@
+import 'dart:developer';
 import 'dart:io';
-
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:helder_proto/features/scanner/controllers/ocr_controller.dart';
-import 'package:helder_proto/features/scanner/screens/result.dart';
-import 'package:helder_proto/utils/helpers/helper_functions.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
-class ScannerController extends GetxController with WidgetsBindingObserver {
-  var isPermissionGranted = false.obs;
-  var isCameraInitialized = false.obs;
+import 'package:helder_proto/navigation_menu.dart';
+import 'package:helder_proto/features/scanner/controllers/ocr_provider.dart';
+import 'package:helder_proto/utils/helpers/helper_functions.dart';
+
+
+class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
+  var _isPermissionGranted = false;
+  bool get isPermissionGranted => _isPermissionGranted;
+  set isPermissionGranted(bool value) {
+    _isPermissionGranted = value;
+    notifyListeners();
+  }
+
+  var _isCameraInitialized = false;
+  bool get isCameraInitialized => _isCameraInitialized;
+  set isCameraInitialized(bool value) {
+    _isCameraInitialized = value;
+    notifyListeners();
+  }
+
   CameraController? cameraController;
-   final OcrController ocrController = OcrController();
+  final OcrController ocrController = OcrController();
 
-  @override
+  ScannerProvider(){
+    log('ScannerProvider is initialized');
+    onInit();
+  }
+
   void onInit() {
-    super.onInit();
     WidgetsBinding.instance.addObserver(this);
     requestCameraPermission();
   }
 
   @override
-  void onClose() {
+  void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     ocrController.dispose();
     cameraController?.dispose();
-    super.onClose();
+    super.dispose();
   }
 
   @override
@@ -44,13 +62,15 @@ class ScannerController extends GetxController with WidgetsBindingObserver {
 
   Future<void> requestCameraPermission() async {
     final status = await Permission.camera.request();
-    isPermissionGranted.value = status == PermissionStatus.granted;
-    if (isPermissionGranted.value) {
+    isPermissionGranted = status == PermissionStatus.granted;
+    if (isPermissionGranted) {
       await initializeCamera();
     }
   }
 
   Future<void> initializeCamera() async {
+    log('initialize Camera from scannerProvider');
+
     final cameras = await availableCameras();
     if (cameras.isNotEmpty) {
       await cameraSelected(cameras.firstWhere(
@@ -72,17 +92,19 @@ class ScannerController extends GetxController with WidgetsBindingObserver {
   Future<void> cameraSelected(CameraDescription camera) async {
     cameraController = CameraController(camera, ResolutionPreset.max, enableAudio: false);
     await cameraController?.initialize();
-    isCameraInitialized.value = cameraController!.value.isInitialized;
+    isCameraInitialized = cameraController!.value.isInitialized;
   }
 
-  Future<void> scanImage() async {
+  Future<void> scanImage(BuildContext context) async {
     if (cameraController == null) return;
+    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);  
+
     try {
       final pictureFile = await cameraController!.takePicture();
       final file = File(pictureFile.path);
       final recognizedText = await ocrController.extractTextFromFile(file);
-
-      Get.to(() => ResultScreen(letterContent: recognizedText));
+      
+      navigationProvider.setResultScreen(recognizedText);
     } catch (e) {
       Get.snackbar('Error', 'An error occurred when scanning text');
     }

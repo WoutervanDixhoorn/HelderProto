@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:helder_proto/providers/verhelder_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:helder_proto/features/agreement/screens/agreement.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+import 'package:helder_proto/app.dart';
+
+Future<void> main() async {
+  final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  await GetStorage.init();
+
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  await initializeDateFormatting('nl_NL', null);
+
   runApp(const HelderApp());
 }
 
-class HelderApp extends StatelessWidget {
-  const HelderApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(create: (context) => VerhelderProvider(),
-    child: const GetMaterialApp(
-        title: 'Helder',
-        home: AgreementScreen(),
-      )
-    );
-  }
-}

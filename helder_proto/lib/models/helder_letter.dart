@@ -22,7 +22,13 @@ class HelderLetter {
     : content = '',
       sender = '',
       simplifiedContent = '',
-      kind = LetterKind.regular;
+      kind = LetterKind.regular; 
+  
+  HelderLetter.fromMap(Map<String, Object?> map) 
+    : content = map['content'] as String? ?? '',
+      sender = map['sender'] as String? ?? '',
+      simplifiedContent = map['simplifiedContent'] as String? ?? '',
+      kind = LetterKind.values.byName(map['kind'] as String? ?? 'regular');
 
   factory HelderLetter.fromJson(String content, Map<String, dynamic> json) {
     final letterJson = json['letter'] as Map<String, dynamic>;

@@ -12,8 +12,6 @@ class HelderPaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: THelperFunctions.screenHeight() * 0.18,
-      width: THelperFunctions.screenWidth() * 0.9,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -34,22 +32,21 @@ class HelderPaymentCard extends StatelessWidget {
                 decoration: const BoxDecoration(
                   color: HelderColors.orange,
                   borderRadius: BorderRadius.horizontal(
-                    left: Radius.circular(12),
+                      left: Radius.circular(12),
+                    ),
                   ),
-                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      // '- €${helderData.amount.toStringAsFixed(2)}',
-                      helderData.letter.kind.kindName,
+                      helderData.amount.toString(),
                       style: const TextStyle(
                         color: HelderColors.darkGrey,
-                        fontSize: 20,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                     const Text(
                       'betalen aan:',
                       style: TextStyle(
@@ -57,12 +54,12 @@ class HelderPaymentCard extends StatelessWidget {
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    // const SizedBox(height: 2),
                     Text(
                       helderData.letter.sender,
                       style: const TextStyle(
                         color: HelderColors.darkGrey,
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
