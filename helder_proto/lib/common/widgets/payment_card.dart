@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:helder_proto/models/helder_invoice.dart';
 import 'package:intl/intl.dart';
 
 import 'package:helder_proto/common/styles/text_styles.dart';
 import 'package:helder_proto/utils/constants/colors.dart';
-import 'package:helder_proto/utils/helpers/helper_functions.dart';
 
 class Paymentcard extends StatelessWidget {
   final String amount;
@@ -20,19 +20,27 @@ class Paymentcard extends StatelessWidget {
     this.isPayed = false
   });
 
+  factory Paymentcard.fromInvoice(HelderInvoice invoice) =>
+    Paymentcard(
+      amount: invoice.amount.toString(), 
+      reciever: invoice.letter.sender, 
+      payDate: invoice.paymentDeadline, 
+      isPayed: invoice.isPayed
+    );
+
   @override
   Widget build(BuildContext context){
 
     return Center(
       child: Container(
-        width: THelperFunctions.screenWidth() * 0.85, //Got measurements from Figma
-        height: THelperFunctions.screenHeight() * 0.17, //Got measurements from Figma
+        width: 360, //Got measurements from Figma and changed them a tiny bit
+        height: 150, //Got measurements from Figma and changed them a tiny bit
 
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: HelderColors.darkGrey.withOpacity(0.2),
               blurRadius: 5
             )
           ]
@@ -65,7 +73,7 @@ class Paymentcard extends StatelessWidget {
 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
 
             Expanded(
@@ -112,8 +120,11 @@ class Paymentcard extends StatelessWidget {
   }
 
   getLeftPanelTop(Color textColor) {
-    final euros = amount.split('.')[0];
-    final cents = amount.split('.')[1];
+    final parts = amount.split('.');
+
+    final euros = parts[0];
+    final cents = (parts.length > 1) ? parts[1].padRight(2, '0') : '00';
+
 
     TextStyle euroStyle = TextStyle(
       color: textColor, 
@@ -164,7 +175,7 @@ class Paymentcard extends StatelessWidget {
     );
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 

@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:ffi';
+
 import 'package:helder_proto/models/helder_letter.dart';
 import 'package:helder_proto/data/services/database_service.dart';
 
@@ -41,8 +40,8 @@ class HelderInvoice {
     invoice.amount = map['amount'] as num? ?? 0.0;
     invoice.isPaymentDue = map['sender'] as bool? ?? false;
     invoice.paymentReference = map['paymentReference'] as String? ?? '';
-    invoice.paymentDeadline = map['paymentDeadline']as DateTime? ?? DateTime(0);
-    invoice.isPayed = map['content'] as bool? ?? false;
+    invoice.paymentDeadline = DateTime.parse(map['paymentDeadline'] as String);
+    invoice.isPayed = (map['isPayed'] as int? ?? 0) == 1;
 
     return invoice;
   }

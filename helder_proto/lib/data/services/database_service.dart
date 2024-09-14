@@ -1,8 +1,9 @@
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
 import 'package:helder_proto/models/helder_invoice.dart';
 import 'package:helder_proto/models/helder_letter.dart';
 import 'package:helder_proto/utils/constants/enums.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 
 class DatabaseService {
   static Database? _db;
@@ -13,15 +14,17 @@ class DatabaseService {
   final String _letterTableName = 'letter';
   final String _letterIdColumnName = 'id';
   final String _letterContentColumnName = 'content';
+  final String _letterSubjectColumnName = 'subject'; //TODO: Add to dataclass and chatgpt prompt etc
   final String _letterSenderColumnName = 'sender';
   final String _letterSimplifiedContentColumnName = 'simplifiedContent';
   final String _letterKindColumnName = 'kind';
-  final String _invoiceTableName = 'invoice';
 
+  final String _invoiceTableName = 'invoice';
   final String _invoiceIdColumnName = 'id';
   final String _invoiceLetterColumnName = 'letterId';
   final String _invoiceAmountColumnName = 'amount';
   final String _invoiceIsPaymentDueColumnName = 'isPaymentDue';
+  final String _invoiceIsPayedColumnName = 'isPayed';
   final String _invoicePaymentReferenceColumnName = 'paymentReference';
   final String _invoicePaymentDeadlineColumnName = 'paymentDeadline';
 
@@ -37,8 +40,8 @@ class DatabaseService {
     final database = await openDatabase(
       databasePath,
       version: 1,
-      onCreate: (db, version) => {
-        db.execute('''
+      onCreate: (db, version) async {
+        await db.execute('''
           CREATE TABLE $_letterTableName (
             $_letterIdColumnName INTEGER PRIMARY KEY,
             $_letterContentColumnName TEXT NOT NULL,
@@ -46,23 +49,29 @@ class DatabaseService {
             $_letterSimplifiedContentColumnName TEXT NOT NULL,
             $_letterKindColumnName TEXT NOT NULL
           );
+        ''');
 
+        await db.execute('''
           CREATE TABLE $_invoiceTableName (
             $_invoiceIdColumnName INTEGER PRIMARY KEY,
             $_invoiceLetterColumnName INTEGER NOT NULL,
             $_invoiceAmountColumnName NUM NOT NULL,
             $_invoiceIsPaymentDueColumnName INTEGER NOT NULL,
+            $_invoiceIsPayedColumnName INTEGET NOT NULL,
             $_invoicePaymentReferenceColumnName TEXT,
             $_invoicePaymentDeadlineColumnName TEXT,
 
             FOREIGN KEY($_invoiceLetterColumnName) REFERENCES $_letterTableName($_letterIdColumnName)
           );
-        ''')
+        ''');
       }
     );
 
     return database;
   }
+
+  Future<void> deleteDatabase(String path) =>
+    databaseFactory.deleteDatabase(path);
 
   Future<int> _addLetter(HelderLetter letter) async {
     final db = await database;
@@ -97,7 +106,7 @@ class DatabaseService {
   Future<HelderLetter> getLetter(int letterId) async {
     final db = await database;
     final letterData = await db.query(
-      _letterIdColumnName, 
+      _letterTableName, 
       distinct: true,
       where: '"$_letterIdColumnName" = ?',
       whereArgs: [letterId]
@@ -119,6 +128,7 @@ class DatabaseService {
         _invoiceLetterColumnName: letterId,
         _invoiceAmountColumnName: helderInvoice.amount,
         _invoiceIsPaymentDueColumnName: helderInvoice.isPaymentDue,
+        _invoiceIsPayedColumnName: helderInvoice.isPayed,
         _invoicePaymentReferenceColumnName: helderInvoice.paymentReference,
         _invoicePaymentDeadlineColumnName: helderInvoice.paymentDeadline.toIso8601String(),
       }

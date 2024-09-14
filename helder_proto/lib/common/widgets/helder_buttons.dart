@@ -21,6 +21,8 @@ class HelderBigButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return  Container(
       margin: margin,
+      width: 240, //Measurements from figma
+      height: 50, //Measurements from figma
       decoration: BoxDecoration(
         color: color,
         borderRadius: borderRadius 

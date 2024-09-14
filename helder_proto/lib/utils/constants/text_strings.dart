@@ -8,4 +8,10 @@ class TTexts {
     "Wil je de algemene voorwaarden lezen?\nKlik dan hier.",
     "Wil je ons privacybeleid lezen?\nKlik dan hier."
   ];
+
+  static const String canYouPayNowText = "De rekening moet betaald worden. Denk goed\nna of je de rekening nu kan betalen. Zijn er nog\nandere dingen die je deze maand nog moet\nbetalen? Denk aan huur, gas, water, elektra en\nzorgverzekering. ";
+
+  static String dontNeedToPayToday(String dateString){
+    return "Je hoeft de rekening niet vandaag te betalen.\nSpaar voor deze rekening en betaal voor $dateString!";
+  } 
 }

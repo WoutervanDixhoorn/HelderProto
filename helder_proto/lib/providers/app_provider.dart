@@ -3,7 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'package:helder_proto/navigation_menu.dart';
-import 'package:helder_proto/features/agreement/screens/agreement.dart';
+import 'package:helder_proto/features/agreement/agreement.dart';
 import 'package:helder_proto/utils/constants/colors.dart';
 
 class AppProvider extends ChangeNotifier {

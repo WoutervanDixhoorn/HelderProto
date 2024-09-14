@@ -1,30 +1,28 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'package:helder_proto/common/styles/text_styles.dart';
 import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/features/result/scanresult_screen_layout.dart';
 import 'package:helder_proto/models/helder_invoice.dart';
-import 'package:helder_proto/navigation_menu.dart';
 import 'package:helder_proto/providers/verhelder_provider.dart';
 import 'package:helder_proto/utils/constants/colors.dart';
 import 'package:helder_proto/utils/helpers/helper_functions.dart';
 
 // ignore: must_be_immutable
 class ScanResultScreen extends StatelessWidget {
-  HelderInvoice? invoice;
+  final HelderInvoice? invoice;
   
   ScanResultScreen({
     super.key,
-
-    this.invoice
-  });
+    HelderInvoice? invoice,
+  }) : invoice = invoice ?? HelderInvoice.empty();
 
   @override
   Widget build(BuildContext context) {
-    invoice ??= HelderInvoice.empty();
 
     return ScanResultScreenLayout(
       paymentCard: Paymentcard(
@@ -111,6 +109,7 @@ class ScanResultScreen extends StatelessWidget {
   void nextStep(BuildContext context) {
     final verhelderProvider = Provider.of<VerhelderProvider>(context, listen: false);
     final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+
     navigationProvider.setPaymentScreen(verhelderProvider.helderData);
   }
 
@@ -169,7 +168,10 @@ class HelderExpandableText extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(text), 
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                ), 
               ),
             ],
           ),

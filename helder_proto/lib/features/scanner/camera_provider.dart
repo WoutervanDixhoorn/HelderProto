@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import 'package:helder_proto/navigation_menu.dart';
-import 'package:helder_proto/features/scanner/controllers/ocr_provider.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
+import 'package:helder_proto/providers/ocr_controller.dart';
 import 'package:helder_proto/utils/helpers/helper_functions.dart';
 
 
-class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
+class CameraProvider extends ChangeNotifier with WidgetsBindingObserver {
   var _isPermissionGranted = false;
   bool get isPermissionGranted => _isPermissionGranted;
   set isPermissionGranted(bool value) {
@@ -27,10 +27,9 @@ class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   CameraController? cameraController;
-  final OcrController ocrController = OcrController();
+  //final OcrController ocrController = OcrController();
 
-  ScannerProvider(){
-    log('ScannerProvider is initialized');
+  CameraProvider(){
     onInit();
   }
 
@@ -42,7 +41,7 @@ class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    ocrController.dispose();
+    //ocrController.dispose();
     cameraController?.dispose();
     super.dispose();
   }
@@ -69,8 +68,6 @@ class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> initializeCamera() async {
-    log('initialize Camera from scannerProvider');
-
     final cameras = await availableCameras();
     if (cameras.isNotEmpty) {
       await cameraSelected(cameras.firstWhere(
@@ -95,18 +92,13 @@ class ScannerProvider extends ChangeNotifier with WidgetsBindingObserver {
     isCameraInitialized = cameraController!.value.isInitialized;
   }
 
-  Future<void> scanImage(BuildContext context) async {
-    if (cameraController == null) return;
-    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);  
-
+  Future<XFile?> takePicture() async {
+    if (!isCameraInitialized) return null;
     try {
-      final pictureFile = await cameraController!.takePicture();
-      final file = File(pictureFile.path);
-      final recognizedText = await ocrController.extractTextFromFile(file);
-      
-      navigationProvider.setResultScreen(recognizedText);
+      log("Taking picture!");
+      return await cameraController!.takePicture();
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred when scanning text');
+      return null;
     }
   }
 

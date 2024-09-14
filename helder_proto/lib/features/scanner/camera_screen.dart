@@ -1,8 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'package:helder_proto/features/scanner/controllers/scanner_provider.dart';
+import 'package:helder_proto/features/scanner/camera_provider.dart';
 import 'package:helder_proto/common/widgets/helder_buttons.dart';
 
 class ScannerScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class Scanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ScannerProvider>(
+    return Consumer<CameraProvider>(
       builder: (context, provider, child ) {
       if (!provider.isPermissionGranted) {
         return const Scaffold(
@@ -43,12 +44,28 @@ class Scanner extends StatelessWidget {
   }
 }
 
-class ScannerCameraView extends StatelessWidget {
+class ScannerCameraView extends StatefulWidget {
   const ScannerCameraView({super.key});
 
   @override
+  State<ScannerCameraView> createState() => _ScannerCameraViewState();
+}
+
+class _ScannerCameraViewState extends State<ScannerCameraView> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+      navigationProvider.resetProviders(context);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer<ScannerProvider>(
+  
+    return Consumer<CameraProvider>(
       builder: (context, provider, child ) {
         return Stack(
           children: [
@@ -63,7 +80,17 @@ class ScannerCameraView extends StatelessWidget {
             Align(
               alignment: Alignment.bottomCenter,
               child: HelderScanButton(
-                onPressed: () => provider.scanImage(context),
+                onPressed: () async {
+                  XFile? pictureFile = await provider.takePicture();
+
+                  if (!mounted) return;
+
+                  if(pictureFile != null){
+                    // ignore: use_build_context_synchronously
+                    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+                    navigationProvider.setResultScreen(pictureFile);
+                  }
+                },
               ),
             ),
           ],

@@ -37,14 +37,13 @@ class ScanResultScreenLayout extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(
+                
+                Container(
                   height: paymentCardHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 30),
-                    child: paymentCard
-                  )
+                  padding: const EdgeInsets.only(top: 30),
+                  child: paymentCard
                 ),
-            
+
                 SizedBox(
                   height: infoBlockHeight,
                   child: Container(
