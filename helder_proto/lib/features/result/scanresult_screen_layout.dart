@@ -28,7 +28,7 @@ class ScanResultScreenLayout extends StatelessWidget {
 
           // Calculate heights based on the flex ratios
           final double paymentCardHeight = (4 / 14) * totalHeight;
-          final double infoBlockHeight = (5 / 14) * totalHeight;
+          final double infoBlockHeight = (5.5 / 14) * totalHeight;
           final double nextButtonHeight = (2 / 14) * totalHeight;
 
           final double remainingHeight = totalHeight -

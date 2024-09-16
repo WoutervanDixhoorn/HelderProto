@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:fuzzywuzzy/fuzzywuzzy.dart' as fuzz;
-import 'package:helder_proto/data/services/database_service.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
-import 'package:helder_proto/models/helder_letter.dart';
-import 'package:helder_proto/utils/constants/enums.dart';
+import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:helder_proto/data/services/database_service.dart';
+import 'package:helder_proto/models/helder_invoice_data.dart';
+import 'package:helder_proto/models/helder_allowance_data.dart';
+import 'package:helder_proto/models/helder_letter_data.dart';
+import 'package:helder_proto/models/helder_tax_data.dart';
+import 'package:helder_proto/models/helder_text_info_data.dart';
+import 'package:helder_proto/utils/constants/enums.dart';
 
 class VerhelderProvider extends ChangeNotifier {
 
@@ -21,12 +24,12 @@ class VerhelderProvider extends ChangeNotifier {
   bool isLoading = true;
   String error = '';
   bool isDuplicate = false;
-  HelderInvoice helderData = HelderInvoice.empty();
+  HelderRenderableData? helderData;
 
   reset() async {
     isLoading = true;
     error = '';
-    helderData = HelderInvoice.empty();
+    helderData = null;
     isDuplicate = false;
     notifyListeners();
   }
@@ -35,17 +38,29 @@ class VerhelderProvider extends ChangeNotifier {
     
     Future.microtask(reset);
 
+    Map<String, dynamic> helderKindsJsonData = helderKindToJson();
+    String helderKindsJsonString = jsonEncode(helderKindsJsonData);
+
+    Map<String, dynamic> specificKindsJsonData = allKindsToJson();
+    String specificKindsJsonString = jsonEncode(specificKindsJsonData);
+
+    Map<String, dynamic> requestBody = {
+      'LetterContent': completeLetter,
+      'LetterKinds': helderKindsJsonString,
+      'SpecificKinds': specificKindsJsonString
+    };
+
     try {
       var response = await http.post(
         baseUrl, 
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, String>{'letterContent': completeLetter})
+        body: jsonEncode(requestBody)
       );
 
       if(response.statusCode == 200) {
-        helderData = helderInvoiceFromJson(completeLetter, response.body);
+        await handleApiResponse(response.body, completeLetter);
       } else {
         error = response.statusCode.toString();
       }
@@ -53,28 +68,136 @@ class VerhelderProvider extends ChangeNotifier {
       error = e.toString();
     }
 
-    isDuplicate = await checkForDuplicate();
-
     isLoading = false;
     notifyListeners();
   }
 
-  Future<bool> checkForDuplicate() async {
-    DateTime paymentDeadline = helderData.paymentDeadline;
-    num amount = helderData.amount;
-    LetterKind kind = helderData.letter.kind;
+  Future<void> handleApiResponse(String responseBody, String completeLetter) async {
+    var jsonResponse = jsonDecode(responseBody);
 
+    String letterKind = jsonResponse['LetterKind'];
+    
+    TextInfo info = TextInfo(
+      content: completeLetter,
+      simplifiedContent: jsonResponse['TextInfo']['SimplifiedContent'],
+    );
+
+    switch (letterKind) {
+      case 'Toeslag':
+        HelderAllowance allowance = HelderAllowance(
+          textInfo: info,
+          amount: double.parse(jsonResponse['Amount']),
+          startDate: DateTime.parse(jsonResponse['StartDate']),
+          endDate: DateTime.parse(jsonResponse['EndDate']),
+          kind: AllowanceKind.values.byName(jsonResponse['SpecificKind']),
+        );
+        isDuplicate = await isAllowanceDuplicate(allowance);
+        log('Allowance created: ${allowance.amount}');
+        helderData = allowance;
+        break;
+
+      case 'Factuur':
+        HelderInvoice invoice = HelderInvoice(
+          textInfo: info,
+          amount: double.parse(jsonResponse['Amount']),
+          sender: jsonResponse['Sender'],
+          subject: jsonResponse['Subject'],
+          paymentDeadline: DateTime.parse(jsonResponse['PaymentDeadline']),
+          kind: InvoiceKind.values.byName(jsonResponse['SpecificKind']),
+          isPayed: false, // Assuming you handle this logic elsewhere
+        );
+        isDuplicate = await isInvoiceDuplicate(invoice);
+        log('Invoice created: ${invoice.amount}');
+        helderData = invoice;
+        break;
+
+      case 'Belasting':
+        HelderTax tax = HelderTax(
+          textInfo: info,
+          amount: double.parse(jsonResponse['Amount']),
+          paymentDeadline: DateTime.parse(jsonResponse['PaymentDeadline']),
+          kind: TaxKind.values.byName(jsonResponse['SpecificKind']),
+          isPayed: false
+        );
+        isDuplicate = await isTaxDuplicate(tax);
+        log('Tax created: ${tax.amount}');
+        helderData = tax;
+        break;
+
+      case 'Brief':
+        HelderLetter letter = HelderLetter(
+          textInfo: info,
+          sender: jsonResponse['Sender'],
+          subject: jsonResponse['Subject'],
+          kind: LetterKind.values.byName(jsonResponse['SpecificKind']),
+        );
+        isDuplicate = await isLetterDuplicate(letter);
+        log('Letter created: ${letter.subject}');
+        break;
+
+      default:
+        log('Unknown LetterKind: $letterKind');
+        break;
+    }
+  }
+
+  Future<bool> isInvoiceDuplicate(HelderInvoice invoice) async {
     List<HelderInvoice> invoices = await DatabaseService.instance.getInvoices();
-    for(var invoice in invoices) {  
-      if (invoice.paymentDeadline == paymentDeadline &&
-          invoice.amount == amount &&
-          invoice.letter.kind == kind) {
-        return true; // Return true immediately when a match is found
+
+    for (var existingInvoice in invoices) {
+      if (existingInvoice.paymentDeadline == invoice.paymentDeadline &&
+          existingInvoice.kind == invoice.kind &&
+          existingInvoice.amount == invoice.amount) {
+        print('Duplicate invoice detected, skipping insertion.');
+        return true;
       }
     }
 
     return false;
   }
 
+  Future<bool> isTaxDuplicate(HelderTax tax) async {
+    List<HelderTax> taxes = await DatabaseService.instance.getTaxes();
 
+    for (var existingTax in taxes) {
+      if (existingTax.paymentDeadline == tax.paymentDeadline &&
+          existingTax.kind == tax.kind &&
+          existingTax.amount == tax.amount) {
+        print('Duplicate tax detected, skipping insertion.');
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<bool> isAllowanceDuplicate(HelderAllowance allowance) async {
+    List<HelderAllowance> allowances = await DatabaseService.instance.getAllowances();
+
+    for (var existingAllowance in allowances) {
+      if (existingAllowance.startDate == allowance.startDate &&
+          existingAllowance.endDate == allowance.endDate &&
+          existingAllowance.kind == allowance.kind &&
+          existingAllowance.amount == allowance.amount) {
+        print('Duplicate allowance detected, skipping insertion.');
+        return true; 
+      }
+    }
+
+    return false;
+  }
+
+  Future<bool> isLetterDuplicate(HelderLetter letter) async {
+    List<HelderLetter> letters = await DatabaseService.instance.getLetters();
+
+    for (var existingLetter in letters) {
+      if (existingLetter.sender == letter.sender &&
+          existingLetter.subject == letter.subject) {
+        print('Duplicate letter detected, skipping insertion.');
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

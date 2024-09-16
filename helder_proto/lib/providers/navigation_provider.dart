@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +5,7 @@ import 'package:helder_proto/features/accounts/accounts_screen.dart';
 import 'package:helder_proto/features/payment/payment_screen.dart';
 import 'package:helder_proto/features/result/result.dart';
 import 'package:helder_proto/features/scanner/camera_screen.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
+import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/providers/scanner_provider.dart';
 import 'package:helder_proto/providers/verhelder_provider.dart';
 import 'package:provider/provider.dart';
@@ -41,8 +39,9 @@ class NavigationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPaymentScreen(HelderInvoice data) {
-    screens[1] = PaymentScreen(invoice: data);
+  void setPaymentScreen(HelderRenderableData helderData) {
+    screens[1] = PaymentScreen(helderData: helderData);
+    _resetProvidersOnSwitch = true;
     selectedIndex = 1;
     notifyListeners();
   }

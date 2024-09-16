@@ -1,35 +1,31 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'package:helder_proto/models/helder_renderable_data.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:helder_proto/common/styles/text_styles.dart';
-import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/features/result/scanresult_screen_layout.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
 import 'package:helder_proto/providers/verhelder_provider.dart';
 import 'package:helder_proto/utils/constants/colors.dart';
 import 'package:helder_proto/utils/helpers/helper_functions.dart';
 
 // ignore: must_be_immutable
 class ScanResultScreen extends StatelessWidget {
-  final HelderInvoice? invoice;
+  final HelderRenderableData helderData;
   
-  ScanResultScreen({
+  const ScanResultScreen({
     super.key,
-    HelderInvoice? invoice,
-  }) : invoice = invoice ?? HelderInvoice.empty();
+    
+    required this.helderData
+  });
 
   @override
   Widget build(BuildContext context) {
 
     return ScanResultScreenLayout(
-      paymentCard: Paymentcard(
-        amount: invoice!.amount.toString(),
-        reciever: invoice!.letter.sender,
-        payDate: invoice!.paymentDeadline,
-      ),
+      paymentCard: helderData.toPaymentCard(),
 
       infoBlock: getInfoBlock(),
 
@@ -43,9 +39,9 @@ class ScanResultScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        HelderTextBlock(title: 'onderwerp', text: invoice!.letter.sender), //TODO: Add subject to letter, using sender now as temporary value
+        HelderTextBlock(title: 'onderwerp', text: helderData.getSubject()),
         
-        HelderTextBlock(title: 'waarom moet ik betalen', text: invoice!.letter.simplifiedContent), //TODO: Make a list with standard 'Why's since ChatGPT cant generate this consistent'
+        HelderTextBlock(title: 'waarom moet ik betalen', text: helderData.getSimplifiedContent()),
         Padding(
           padding: const EdgeInsets.only(top: 10),
           child: getRemissionInfoText(),
@@ -79,7 +75,7 @@ class ScanResultScreen extends StatelessWidget {
   Widget getExpandableText() {
     return HelderExpandableText(
       title: "Volledige brief",
-      text: invoice!.letter.content,
+      text: helderData.getFullText(),
     );
   }
 
@@ -110,7 +106,7 @@ class ScanResultScreen extends StatelessWidget {
     final verhelderProvider = Provider.of<VerhelderProvider>(context, listen: false);
     final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
 
-    navigationProvider.setPaymentScreen(verhelderProvider.helderData);
+    navigationProvider.setPaymentScreen(verhelderProvider.helderData!);
   }
 
 }

@@ -25,7 +25,7 @@ class ScannerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> scanImage(BuildContext context, XFile pictureFile) async {
+  Future<void> scanImageAndSendToApi(BuildContext context, XFile pictureFile) async {
     final verhelderProvider = Provider.of<VerhelderProvider>(context, listen: false);
 
     if(_apiCallMade) {

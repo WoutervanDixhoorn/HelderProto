@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/data/services/database_service.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
+import 'package:helder_proto/models/helder_invoice_data.dart';
+import 'package:helder_proto/models/helder_allowance_data.dart';
+import 'package:helder_proto/models/helder_renderable_data.dart';
+import 'package:helder_proto/models/helder_tax_data.dart';
 
 class AccountsList extends StatelessWidget {
   final bool payedAccounts;
@@ -38,25 +40,34 @@ class AccountsList extends StatelessWidget {
     );
   }
 
-    Future<List<Widget>> getPaymentCards() async {
+  Future<List<Widget>> getPaymentCards() async {
     DatabaseService databaseService = DatabaseService.instance;
     
     List<Widget> paymentCards = [
-      const SizedBox(height: 94,)
+      const SizedBox(height: 94,),
     ];
 
     List<HelderInvoice> invoices = await databaseService.getInvoices();
-    for (HelderInvoice invoice in invoices) {
-      if(invoice.isPayed != payedAccounts){ continue; }
+    List<HelderAllowance> allowances = await databaseService.getAllowances();
+    List<HelderTax> taxes = await databaseService.getTaxes();
+    
+    // Combine all data into one list of RenderableData
+    List<HelderRenderableData> allData = [...invoices,...allowances,...taxes];
 
+    for (var data in allData) {
+      // Check the 'isPayed' condition where applicable (only applies to invoices and taxes)
+      if (data is HelderInvoice && data.isPayed != payedAccounts) continue;
+      if (data is HelderTax && data.isPayed != payedAccounts) continue;
+      if(data is HelderAllowance && !payedAccounts) continue;
+      // Add the payment card to the list using the toPaymentCard method
       paymentCards.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 30),
-          child: Paymentcard.fromInvoice(invoice)
+          child: data.toPaymentCard(), // Use the method defined in RenderableData
         )
       );
     }
-    
+
     return paymentCards;
   }
 }

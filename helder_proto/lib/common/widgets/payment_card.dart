@@ -1,59 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import 'package:helder_proto/models/helder_renderable_data.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:helder_proto/common/styles/text_styles.dart';
 import 'package:helder_proto/utils/constants/colors.dart';
 
 class Paymentcard extends StatelessWidget {
+  final HelderRenderableData helderData;
+
   final String amount;
-  final String reciever;
-  final DateTime payDate;
+  final String letterSource;
+
+  final DateTime paymentDate;
+  final DateTime? paymentEndDate;
+
+  final DateTime? isPayedDate;
   final bool isPayed;
+
+  final bool isRecievingMoney;
 
   const Paymentcard({
     super.key,
 
-    required this.amount,
-    required this.reciever,
-    required this.payDate,
-    this.isPayed = false
-  });
+    required this.helderData,
 
-  factory Paymentcard.fromInvoice(HelderInvoice invoice) =>
-    Paymentcard(
-      amount: invoice.amount.toString(), 
-      reciever: invoice.letter.sender, 
-      payDate: invoice.paymentDeadline, 
-      isPayed: invoice.isPayed
-    );
+    required this.amount,
+    required this.letterSource,
+
+    required this.paymentDate,
+    this.paymentEndDate,
+  
+    this.isPayedDate,
+    this.isPayed = false,
+    
+    this.isRecievingMoney = false
+  });
 
   @override
   Widget build(BuildContext context){
 
     return Center(
-      child: Container(
-        width: 360, //Got measurements from Figma and changed them a tiny bit
-        height: 150, //Got measurements from Figma and changed them a tiny bit
-
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: HelderColors.darkGrey.withOpacity(0.2),
-              blurRadius: 5
-            )
-          ]
-        ),
-
-        child: Row(
-          children: [
-            getLeftPanel(),
-            getRightPanel()
-          ],
+      child: GestureDetector(
+        onTap: () {
+          _navigateToPaymentScreen(context);
+        },
+        child: Container(
+          width: 360, //Got measurements from Figma and changed them a tiny bit
+          height: 150, //Got measurements from Figma and changed them a tiny bit
+        
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: HelderColors.darkGrey.withOpacity(0.2),
+                blurRadius: 5
+              )
+            ]
+          ),
+        
+          child: Row(
+            children: [
+              getLeftPanel(),
+              getRightPanel()
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  void _navigateToPaymentScreen(BuildContext context) {
+    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+    navigationProvider.requestResetOnSwitch();
+    navigationProvider.setPaymentScreen(helderData);
   }
 
   getLeftPanel() {
@@ -98,7 +119,7 @@ class Paymentcard extends StatelessWidget {
   }
 
   PanelColors getLeftPanelColors() {
-    int daysLeft = payDate.difference(DateTime.now()).inDays;
+    int daysLeft = paymentDate.difference(DateTime.now()).inDays;
 
     PanelColors colors = PanelColors();
     colors.panelColor = HelderColors.yellow;
@@ -111,7 +132,7 @@ class Paymentcard extends StatelessWidget {
       colors.panelColor = HelderColors.red;
     }
 
-    if(isPayed) {
+    if(isPayed || isRecievingMoney) {
       colors.panelColor = HelderColors.green;
       colors.textColor = HelderColors.white;
     }
@@ -125,6 +146,10 @@ class Paymentcard extends StatelessWidget {
     final euros = parts[0];
     final cents = (parts.length > 1) ? parts[1].padRight(2, '0') : '00';
 
+    String amountPrefix = '-';
+    if(isRecievingMoney){
+      amountPrefix = '+';
+    }
 
     TextStyle euroStyle = TextStyle(
       color: textColor, 
@@ -144,7 +169,7 @@ class Paymentcard extends StatelessWidget {
       text: TextSpan(
         children: [
           TextSpan(
-            text: '- €$euros,',
+            text: '$amountPrefix €$euros,',
             style: euroStyle 
           ),
           WidgetSpan(
@@ -174,19 +199,28 @@ class Paymentcard extends StatelessWidget {
       fontSize: 16
     );
 
+    String amountText = "Betalen aan:";
+    if(isRecievingMoney) {
+      amountText = "Krijgen van:";
+    }
+
+    if(isPayed){
+      amountText = "betaald aan:";
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 
         Text(
-          "Betalen aan:",
+          amountText,
           style: payToStyle,
         ),
 
         Flexible(
           child: Text(
-            reciever,
+            letterSource,
             textAlign: TextAlign.start,
             overflow: TextOverflow.visible,
             style: recieverStyle
@@ -237,15 +271,25 @@ class Paymentcard extends StatelessWidget {
   }
 
   getRightPanelTop() {
-    String formattedDate = DateFormat('d MMMM yyyy', 'nl').format(payDate);
+    String formattedDate = DateFormat('d MMMM yyyy', 'nl').format(paymentDate);
+
+    String dateText = "Betalen voor:";
+    if(isRecievingMoney) {
+      dateText = "Krijgen vanaf:";
+    }
+    
+    if(isPayed) {
+      dateText = "betaling gelukt";
+      formattedDate = "Goed bezig!";
+    }
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
 
-        const Text(
-          "Betalen voor:",
+        Text(
+          dateText,
           style: HelderText.payToTextStyle,
         ),
 
@@ -263,25 +307,76 @@ class Paymentcard extends StatelessWidget {
   }
 
   getRightPanelBottom() {
-    int daysLeft = payDate.difference(DateTime.now()).inDays;
+    int daysLeft = 0;
 
-    return RichText(
-      textAlign: TextAlign.right,
-      text: TextSpan(
-        text: "nog ",
-        style: HelderText.payToTextStyle,
-        children: [
-          TextSpan(
-            text: "$daysLeft dagen\n",
-            style: HelderText.smallTitleTextStyle
-          ),
-          const TextSpan(
-            text: " om te betalen.",
-            style: HelderText.payToTextStyle
-          )
-        ]
-      ),
-    );
+    if(isRecievingMoney && paymentEndDate != null){
+      daysLeft = paymentEndDate!.difference(DateTime.now()).inDays;
+    } else {
+      daysLeft = paymentDate.difference(DateTime.now()).inDays;
+    }
+    
+    return getRightPanelBottomText(daysLeft);
+  }
+
+  getRightPanelBottomText(int daysLeft) {
+    Widget bottomText;
+
+    if(!isRecievingMoney){
+      bottomText = RichText(
+        textAlign: TextAlign.right,
+        text: TextSpan(
+          text: "nog ",
+          style: HelderText.payToTextStyle,
+          children: [
+            TextSpan(
+              text: "$daysLeft dagen\n",
+              style: HelderText.smallTitleTextStyle
+            ),
+            const TextSpan(
+              text: " om te betalen.",
+              style: HelderText.payToTextStyle
+            )
+          ]
+        ),
+      );
+    } else {
+      bottomText = RichText(
+        textAlign: TextAlign.right,
+        text: TextSpan(
+          text: "Eindigt over\n",
+          style: HelderText.payToTextStyle,
+          children: [
+            TextSpan(
+              text: "$daysLeft dagen",
+              style: HelderText.smallTitleTextStyle
+            )
+          ]
+        ),
+      );
+    }
+
+    if(isPayed) {
+      String formattedDate = 'onbekend';
+      if(isPayedDate != null){
+        formattedDate = DateFormat('d MMMM yyyy', 'nl').format(isPayedDate!);
+      } 
+
+      bottomText = RichText(
+        textAlign: TextAlign.right,
+        text: TextSpan(
+          text: "Betaald op:\n",
+          style: HelderText.payToTextStyle,
+          children: [
+            TextSpan(
+              text: formattedDate,
+              style: HelderText.smallTitleTextStyle
+            )
+          ]
+        ),
+      );
+    }
+
+    return bottomText;
   }
 
 }

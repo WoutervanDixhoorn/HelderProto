@@ -1,13 +1,8 @@
 import 'dart:developer';
-import 'dart:io';
-import 'package:get/get.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
-import 'package:helder_proto/providers/navigation_provider.dart';
-import 'package:helder_proto/providers/ocr_controller.dart';
 import 'package:helder_proto/utils/helpers/helper_functions.dart';
 
 
@@ -27,7 +22,6 @@ class CameraProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   CameraController? cameraController;
-  //final OcrController ocrController = OcrController();
 
   CameraProvider(){
     onInit();
@@ -41,7 +35,6 @@ class CameraProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    //ocrController.dispose();
     cameraController?.dispose();
     super.dispose();
   }

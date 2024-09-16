@@ -1,36 +1,30 @@
 import 'package:helder_proto/data/services/database_service.dart';
-import 'package:helder_proto/models/helder_invoice.dart';
+import 'package:helder_proto/models/helder_allowance_data.dart';
+import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/providers/navigation_provider.dart';
 
 class PaymentController {
   final DatabaseService databaseService = DatabaseService.instance;
-
-  final HelderInvoice invoice;
+  final HelderRenderableData helderData;
 
   PaymentController({
-    required this.invoice
+    required this.helderData
   });
 
-  void onPayNow(NavigationProvider navigationProvider) async
-  {
-    //Mark the HelderInvoice as payed and put it in the database
-    HelderInvoice payedInvoice = invoice;
-    payedInvoice.isPayed = true;
-
-    await databaseService.addInvoice(payedInvoice);
-
+  void onPayNow(NavigationProvider navigationProvider) async {
+    await helderData.markAsPayed(databaseService);
     navigationProvider.setAccountsScreen(true);
   }
 
-  void onPayLater(NavigationProvider navigationProvider) async
-  {
-    //Mark the HelderInvoice as not payed and put it in the database
-    HelderInvoice payedInvoice = invoice;
-    payedInvoice.isPayed = false;
-
-    await databaseService.addInvoice(payedInvoice);
-
+  void onPayLater(NavigationProvider navigationProvider) async {
+    await helderData.markAsNotPayed(databaseService);
     navigationProvider.setAccountsScreen(false);
+  }
+
+  void onAllowanceOkay(NavigationProvider navigationProvider) async {
+    if (helderData is HelderAllowance) {
+      await helderData.insertOrUpdate(databaseService);
+    }
   }
 
 }
