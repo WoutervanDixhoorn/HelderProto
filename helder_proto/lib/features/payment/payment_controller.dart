@@ -1,5 +1,4 @@
 import 'package:helder_proto/data/services/database_service.dart';
-import 'package:helder_proto/models/helder_allowance_data.dart';
 import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/providers/navigation_provider.dart';
 
@@ -21,10 +20,11 @@ class PaymentController {
     navigationProvider.setAccountsScreen(false);
   }
 
-  void onAllowanceOkay(NavigationProvider navigationProvider) async {
-    if (helderData is HelderAllowance) {
+  void onReviecvingOkay(NavigationProvider navigationProvider) async {
+    if (helderData.isRecievingMoney()) {
       await helderData.insertOrUpdate(databaseService);
     }
+    navigationProvider.setAccountsScreen(true);
   }
 
 }

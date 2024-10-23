@@ -1,8 +1,8 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:helder_proto/models/helder_invoice_data.dart';
 import 'package:helder_proto/models/helder_renderable_data.dart';
+import 'package:helder_proto/models/helder_tax_data.dart';
 import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:helder_proto/providers/scanner_provider.dart';
 import 'package:provider/provider.dart';
@@ -42,13 +42,15 @@ class _ResultScreenState extends State<ResultScreen> {
     bool areLoading = scannerProvider.isLoading | verhelderProvider.isLoading;
     String error = handleError(scannerProvider.error, verhelderProvider.error);
 
-    //TODO: Handle this properly with a correct page
     if (verhelderProvider.isDuplicate) {
-      log("Duplicate!!");
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigationProvider.resetProviders(context);
-        navigationProvider.setAccountsScreen(false); 
-      });
+      HelderRenderableData? helderData = verhelderProvider.helderData;
+
+      if (helderData != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigationProvider.resetProviders(context);
+          navigationProvider.setIsDuplicateScreen(helderData);
+        });
+      }
     }
 
     return areLoading | verhelderProvider.isDuplicate

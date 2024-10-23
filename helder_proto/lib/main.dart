@@ -13,10 +13,10 @@ import 'package:helder_proto/app.dart';
 Future<void> main() async {
   final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // final databaseService = DatabaseService.instance;
-  // final databaseDirPath = await getDatabasesPath();
-  // final databasePath = join(databaseDirPath, "master_db.db");
-  // await databaseService.deleteDatabase(databasePath);
+  final databaseService = DatabaseService.instance;
+  final databaseDirPath = await getDatabasesPath();
+  final databasePath = join(databaseDirPath, "master_db.db");
+  await databaseService.deleteDatabase(databasePath);
 
   await GetStorage.init();
 

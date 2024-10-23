@@ -1,10 +1,16 @@
 import 'dart:developer';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:helder_proto/common/styles/text_styles.dart';
+import 'package:helder_proto/common/widgets/helder_remission_text.dart';
 import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/data/services/database_service.dart';
 import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/models/helder_text_info_data.dart';
 import 'package:helder_proto/utils/constants/enums.dart';
+import 'package:helder_proto/utils/constants/text_strings.dart';
+import 'package:intl/intl.dart';
 
 class HelderTax extends HelderRenderableData {
   int id;
@@ -31,7 +37,7 @@ class HelderTax extends HelderRenderableData {
   HelderTax.empty()
     : id = -1,
       textInfo = TextInfo.empty(),
-      kind = TaxKind.inkomstenBelasting,
+      kind = TaxKind.inkomstenBelastingBetalen,
       amount = 0.0,
       paymentDeadline = DateTime(1),
       isPayedDate = DateTime(1),
@@ -41,8 +47,8 @@ class HelderTax extends HelderRenderableData {
     return HelderTax(
       id: map['Id'] as int? ?? -1,
       textInfo: textInfo,
-      kind: TaxKind.values.byName(map['TaxKind'] as String? ?? 'overigeBelasting'),
-      amount: map['Amount'] as num? ?? 0.0,
+      kind: TaxKind.values.byName(map['SpecificKind'] as String? ?? 'overigeBelasting'),
+      amount: double.tryParse(map['Amount']?.toString() ?? '') ?? 0.0,
       paymentDeadline: DateTime.parse(map['PaymentDeadline'] as String? ?? '1970-01-01'),
       isPayedDate:  DateTime.parse(map['IsPayedDate'] as String? ?? '1970-01-01'),
       isPayed: (map['IsPayed'] as int? ?? 0) == 1,
@@ -53,17 +59,108 @@ class HelderTax extends HelderRenderableData {
     return {
       'Id': id,
       'TextInfo': textInfo.toMap(),
-      'TaxKind': kind.name,
+      'SpecificKind': kind.name,
       'Amount': amount,
       'PaymentDeadline': paymentDeadline.toIso8601String(),
-      'IsPayedDate': isPayedDate?.toIso8601String() ?? '',
+      'IsPayedDate': isPayedDate?.toIso8601String() ?? DateTime(0).toIso8601String(),
       'IsPayed': isPayed ? 1 : 0,
     };
   }
 
   @override
-  int getId() {
-    return id;
+  int getId() => id;
+  
+  @override
+  TextInfo getTextInfo() => textInfo;
+
+  @override
+  bool isRecievingMoney() {
+    return kind == TaxKind.inkomstenBelastingOntvangen;
+  }
+
+  @override
+  bool getIsPayed() => isPayed;
+
+  @override
+  HelderRemissionText getRemissionText() {
+    if(isRecievingMoney()) {
+      return const HelderRemissionText(remissionText: []);
+    }
+
+    return HelderRemissionText(
+      remissionText: <TextSpan> [
+        const TextSpan(
+          text: "Let op of je een ",
+          style: HelderText.remissionStyle
+        ),
+        TextSpan(
+          text: "kwijtschelding",
+          style: HelderText.remissionStyleClickable,
+          recognizer: TapGestureRecognizer()
+            ..onTap = () async {
+              //await launchUrl(Uri.parse("")); // Launch url
+            },
+        ),
+        const TextSpan(
+          text: " kan krijgen."
+        )
+      ]
+    );
+  }
+
+  @override
+  Widget getPaymentScreenInfoBlock() {
+    if(isRecievingMoney()) {
+      return const SizedBox(); //TODO: Place some informative text here!
+    }
+
+    String formattedDate = DateFormat('d MMMM', 'nl').format(paymentDeadline);
+
+    String bottomExtraInfo = TTexts.dontNeedToPayToday(formattedDate);
+    if(paymentDeadline.isBefore(DateTime.now())){
+      bottomExtraInfo = TTexts.paymentTooLate(formattedDate);
+    }
+
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: Text(
+              TTexts.canYouPayNowText,
+              style: HelderText.breadStyle
+            ),
+          ),
+      
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Text(
+              textAlign: TextAlign.center,
+              bottomExtraInfo, 
+              style: HelderText.remissionStyle,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Paymentcard toPaymentCard() {
+    return Paymentcard(
+      helderData: this,
+
+      isPayed: isPayed,
+      isPayedDate: isPayedDate,
+
+      amount: amount.toString(), 
+      letterSource: textInfo.sender, 
+      paymentDate: paymentDeadline,
+
+      isRecievingMoney: isRecievingMoney(),
+    );
   }
 
   @override
@@ -91,32 +188,4 @@ class HelderTax extends HelderRenderableData {
     await insertOrUpdate(databaseService);
   }
 
-  @override
-  String getFullText() {
-    return textInfo.content;
-  }
-
-  @override
-  String getSimplifiedContent() {
-    return textInfo.simplifiedContent;
-  }
-
-  @override
-  String getSubject() {
-    return kind.kindName;
-  }
-
-  @override
-  Paymentcard toPaymentCard() {
-    return Paymentcard(
-      helderData: this,
-
-      isPayed: isPayed,
-      isPayedDate: isPayedDate,
-
-      amount: amount.toString(), 
-      letterSource: "Belastingdienst", //TODO: Misschien dit ook uit de json van de chatgpt krijgen 
-      paymentDate: paymentDeadline
-    );
-  }
 }

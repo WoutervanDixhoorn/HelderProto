@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import 'package:helder_proto/features/accounts/accounts_screen.dart';
+import 'package:helder_proto/features/infoscreens/is_duplicate_screen.dart';
 import 'package:helder_proto/features/payment/payment_screen.dart';
 import 'package:helder_proto/features/result/result.dart';
 import 'package:helder_proto/features/scanner/camera_screen.dart';
@@ -48,6 +49,13 @@ class NavigationProvider extends ChangeNotifier {
 
   void setAccountsScreen(bool payedAccounts) {
     screens[1] = AccountsScreen(payedAccounts: payedAccounts);
+    selectedIndex = 1;
+    notifyListeners();
+  }
+
+  void setIsDuplicateScreen(HelderRenderableData helderData) {
+    screens[1] = IsDuplicateScreen(helderData: helderData);
+    _resetProvidersOnSwitch = true;
     selectedIndex = 1;
     notifyListeners();
   }

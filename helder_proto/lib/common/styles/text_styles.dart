@@ -11,6 +11,10 @@ abstract final class HelderText {
   static const TextStyle smallButtonStyle = TextStyle(color: HelderColors.white, fontFamily: 'Rota', fontWeight: FontWeight.w800, fontSize: 18);
   static const TextStyle bigButtonStyle = TextStyle(color: HelderColors.white, fontFamily: 'Rota', fontWeight: FontWeight.w800, fontSize: 22);
   static const TextStyle expandableButtonStyle = TextStyle(color: HelderColors.darkGrey, fontFamily: 'Rota', fontWeight: FontWeight.w900, fontSize: 22);
+  
+  static const TextStyle bigBoldTextStyleDark = TextStyle(color: HelderColors.darkGrey, fontFamily: 'Rota', fontWeight: FontWeight.w800, fontSize: 22);
+  static const TextStyle w300TextStyleDark = TextStyle(color: HelderColors.darkGrey, fontFamily: 'Rota', fontWeight: FontWeight.w300, fontSize: 22);
+  
 
   static const TextStyle amountEuroCardTextStyle = TextStyle(color: HelderColors.darkGrey, fontFamily: 'Rota', fontWeight: FontWeight.bold, fontSize: 36);
   static const TextStyle amountCentsCardTextStyle = TextStyle(color: HelderColors.darkGrey, fontFamily: 'Rota', fontWeight: FontWeight.bold, fontSize: 16);

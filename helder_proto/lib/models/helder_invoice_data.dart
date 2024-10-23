@@ -1,19 +1,23 @@
 import 'dart:developer';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:helder_proto/common/styles/text_styles.dart';
+import 'package:helder_proto/common/widgets/helder_remission_text.dart';
 import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/data/services/database_service.dart';
 import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/models/helder_text_info_data.dart';
 import 'package:helder_proto/utils/constants/enums.dart';
+import 'package:helder_proto/utils/constants/text_strings.dart';
+import 'package:intl/intl.dart';
 
 class HelderInvoice extends HelderRenderableData {
   int id;
 
   TextInfo textInfo;
   InvoiceKind kind;
-  String sender;
-  String subject;
-  num amount;
+  double amount;
   DateTime paymentDeadline;
   DateTime? isPayedDate;
   bool isPayed;
@@ -23,8 +27,6 @@ class HelderInvoice extends HelderRenderableData {
 
     required this.textInfo,
     required this.kind,
-    required this.sender,
-    required this.subject,
     required this.amount,
     required this.paymentDeadline,
 
@@ -36,8 +38,6 @@ class HelderInvoice extends HelderRenderableData {
     : id = -1,
       textInfo = TextInfo.empty(),
       kind = InvoiceKind.overig,
-      sender = "",
-      subject = "",
       amount = 0.0,
       paymentDeadline = DateTime(1),
       isPayedDate = DateTime(1),
@@ -47,10 +47,8 @@ class HelderInvoice extends HelderRenderableData {
     return HelderInvoice(
       id: map['Id'] as int? ?? -1,
       textInfo: textInfo,
-      kind: InvoiceKind.values.byName(map['Kind'] as String? ?? 'dienst'),
-      sender: map['Sender'] as String,
-      subject: map['Subject'] as String,
-      amount: map['Amount'] as num? ?? 0.0,
+      kind: InvoiceKind.values.byName(map['SpecificKind'] as String? ?? 'dienst'),
+      amount: double.tryParse(map['Amount']?.toString() ?? '') ?? 0.0,
       paymentDeadline: DateTime.parse(map['PaymentDeadline'] as String? ?? '1970-01-01'),
       isPayedDate:  DateTime.parse(map['IsPayedDate'] as String? ?? '1970-01-01'),
       isPayed: (map['IsPayed'] as int? ?? 0) == 1,
@@ -61,19 +59,79 @@ class HelderInvoice extends HelderRenderableData {
     return {
       'Id': id,
       'TextInfo': textInfo.toMap(),
-      'Kind': kind.name,
-      'Sender': sender,
-      'Subject': subject,
+      'SpecificKind': kind.name,
       'Amount': amount,
       'PaymentDeadline': paymentDeadline.toIso8601String(),
-      'IsPayedDate': isPayedDate?.toIso8601String() ?? '',
+      'IsPayedDate': isPayedDate?.toIso8601String() ?? DateTime(0).toIso8601String(),
       'IsPayed': isPayed ? 1 : 0,
     };
   }
 
   @override
-  int getId() {
-    return id;
+  int getId() => id;
+  
+  @override
+  TextInfo getTextInfo() => textInfo;
+
+  @override
+  bool isRecievingMoney() => false;
+
+  @override
+  bool getIsPayed() => isPayed;
+
+  @override
+  HelderRemissionText getRemissionText() {
+    return const HelderRemissionText(
+      remissionText: <TextSpan> [
+          //Empty for now, invoice doesnt have possibilty for remision. 
+          //Maybe another helpful text could be shown here!
+      ]
+    );
+  }
+
+  @override
+  Widget getPaymentScreenInfoBlock() {
+    String formattedDate = DateFormat('d MMMM', 'nl').format(paymentDeadline);
+
+    String bottomExtraInfo = TTexts.dontNeedToPayToday(formattedDate);
+    if(paymentDeadline.isBefore(DateTime.now())){
+      bottomExtraInfo = TTexts.paymentTooLate(formattedDate);
+    }
+
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (!isPayed) ...[
+            const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Text(
+                TTexts.canYouPayNowText,
+                style: HelderText.breadStyle,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Text(
+                textAlign: TextAlign.center,
+                bottomExtraInfo,
+                style: HelderText.remissionStyle,
+              ),
+            ),
+          ] else ...[
+            const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Text(
+                textAlign: TextAlign.center,
+                "Deze rekening is al betaalt. Goed bezig!",
+                style: HelderText.remissionStyle,
+              )
+            )
+          ]
+        ]
+      ),
+    );
   }
 
   @override
@@ -102,21 +160,6 @@ class HelderInvoice extends HelderRenderableData {
   }
 
   @override
-  String getFullText() {
-    return textInfo.content;
-  }
-
-  @override
-  String getSimplifiedContent() {
-    return textInfo.simplifiedContent;
-  }
-
-  @override
-  String getSubject() {
-    return subject;
-  }
-
-  @override
   Paymentcard toPaymentCard() {
     return Paymentcard(
       helderData: this,
@@ -125,7 +168,7 @@ class HelderInvoice extends HelderRenderableData {
       isPayedDate: isPayedDate,
 
       amount: amount.toString(), 
-      letterSource: sender, 
+      letterSource: textInfo.sender, 
       paymentDate: paymentDeadline,
     );
   }

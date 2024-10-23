@@ -80,59 +80,36 @@ class VerhelderProvider extends ChangeNotifier {
     TextInfo info = TextInfo(
       content: completeLetter,
       simplifiedContent: jsonResponse['TextInfo']['SimplifiedContent'],
+      sender: jsonResponse['TextInfo']['Sender'],
+      subject: jsonResponse['TextInfo']['Subject']
     );
 
     switch (letterKind) {
       case 'Toeslag':
-        HelderAllowance allowance = HelderAllowance(
-          textInfo: info,
-          amount: double.parse(jsonResponse['Amount']),
-          startDate: DateTime.parse(jsonResponse['StartDate']),
-          endDate: DateTime.parse(jsonResponse['EndDate']),
-          kind: AllowanceKind.values.byName(jsonResponse['SpecificKind']),
-        );
+        HelderAllowance allowance = HelderAllowance.fromMap(jsonResponse, info);
         isDuplicate = await isAllowanceDuplicate(allowance);
         log('Allowance created: ${allowance.amount}');
         helderData = allowance;
         break;
 
       case 'Factuur':
-        HelderInvoice invoice = HelderInvoice(
-          textInfo: info,
-          amount: double.parse(jsonResponse['Amount']),
-          sender: jsonResponse['Sender'],
-          subject: jsonResponse['Subject'],
-          paymentDeadline: DateTime.parse(jsonResponse['PaymentDeadline']),
-          kind: InvoiceKind.values.byName(jsonResponse['SpecificKind']),
-          isPayed: false, // Assuming you handle this logic elsewhere
-        );
+        HelderInvoice invoice = HelderInvoice.fromMap(jsonResponse, info);
         isDuplicate = await isInvoiceDuplicate(invoice);
         log('Invoice created: ${invoice.amount}');
         helderData = invoice;
         break;
 
       case 'Belasting':
-        HelderTax tax = HelderTax(
-          textInfo: info,
-          amount: double.parse(jsonResponse['Amount']),
-          paymentDeadline: DateTime.parse(jsonResponse['PaymentDeadline']),
-          kind: TaxKind.values.byName(jsonResponse['SpecificKind']),
-          isPayed: false
-        );
+        HelderTax tax = HelderTax.fromMap(jsonResponse, info);
         isDuplicate = await isTaxDuplicate(tax);
         log('Tax created: ${tax.amount}');
         helderData = tax;
         break;
 
       case 'Brief':
-        HelderLetter letter = HelderLetter(
-          textInfo: info,
-          sender: jsonResponse['Sender'],
-          subject: jsonResponse['Subject'],
-          kind: LetterKind.values.byName(jsonResponse['SpecificKind']),
-        );
+        HelderLetter letter = HelderLetter.fromMap(jsonResponse, info);
         isDuplicate = await isLetterDuplicate(letter);
-        log('Letter created: ${letter.subject}');
+        log('Letter created: ${letter.textInfo.subject}');
         break;
 
       default:
@@ -148,6 +125,7 @@ class VerhelderProvider extends ChangeNotifier {
       if (existingInvoice.paymentDeadline == invoice.paymentDeadline &&
           existingInvoice.kind == invoice.kind &&
           existingInvoice.amount == invoice.amount) {
+        helderData = existingInvoice;
         print('Duplicate invoice detected, skipping insertion.');
         return true;
       }
@@ -163,6 +141,7 @@ class VerhelderProvider extends ChangeNotifier {
       if (existingTax.paymentDeadline == tax.paymentDeadline &&
           existingTax.kind == tax.kind &&
           existingTax.amount == tax.amount) {
+        helderData = existingTax;
         print('Duplicate tax detected, skipping insertion.');
         return true;
       }
@@ -179,6 +158,7 @@ class VerhelderProvider extends ChangeNotifier {
           existingAllowance.endDate == allowance.endDate &&
           existingAllowance.kind == allowance.kind &&
           existingAllowance.amount == allowance.amount) {
+        helderData = existingAllowance;
         print('Duplicate allowance detected, skipping insertion.');
         return true; 
       }
@@ -191,8 +171,8 @@ class VerhelderProvider extends ChangeNotifier {
     List<HelderLetter> letters = await DatabaseService.instance.getLetters();
 
     for (var existingLetter in letters) {
-      if (existingLetter.sender == letter.sender &&
-          existingLetter.subject == letter.subject) {
+      if (existingLetter.textInfo.sender == letter.textInfo.sender &&
+          existingLetter.textInfo.subject == letter.textInfo.subject) {
         print('Duplicate letter detected, skipping insertion.');
         return true;
       }

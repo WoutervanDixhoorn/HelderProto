@@ -1,5 +1,3 @@
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,43 +37,24 @@ class ScanResultScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        HelderTextBlock(title: 'onderwerp', text: helderData.getSubject()),
+        HelderTextBlock(title: 'onderwerp', text: helderData.getTextInfo().subject),
         
-        HelderTextBlock(title: 'waarom moet ik betalen', text: helderData.getSimplifiedContent()),
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: getRemissionInfoText(),
-        )
-      ]
-    );
-  }
+        !helderData.isRecievingMoney() ?
+          	HelderTextBlock(title: 'waarom moet ik betalen', text: helderData.getTextInfo().simplifiedContent) :
+            HelderTextBlock(title: 'waarom ontvang ik geld', text: helderData.getTextInfo().simplifiedContent),
 
-  Widget getRemissionInfoText() {
-    return RichText(
-      text: TextSpan(
-        text: "Let op of je een ",
-        style: HelderText.remissionStyle,
-        children: [
-          TextSpan(
-            text: "kwijtschelding",
-            style: HelderText.remissionStyleClickable,
-            recognizer: TapGestureRecognizer()
-              ..onTap = () async {
-                //await launchUrl(Uri.parse("")); // Launch url
-              },
-          ),
-          const TextSpan(
-            text: " kan krijgen."
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: helderData.getRemissionText(),
           )
-        ]
-      ),
+      ]
     );
   }
 
   Widget getExpandableText() {
     return HelderExpandableText(
       title: "Volledige brief",
-      text: helderData.getFullText(),
+      text: helderData.getTextInfo().content,
     );
   }
 

@@ -1,17 +1,22 @@
 import 'dart:developer';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:helder_proto/common/styles/text_styles.dart';
+import 'package:helder_proto/common/widgets/helder_remission_text.dart';
 import 'package:helder_proto/common/widgets/payment_card.dart';
 import 'package:helder_proto/data/services/database_service.dart';
 import 'package:helder_proto/models/helder_renderable_data.dart';
 import 'package:helder_proto/models/helder_text_info_data.dart';
 import 'package:helder_proto/utils/constants/enums.dart';
+import 'package:helder_proto/utils/constants/text_strings.dart';
 
 class HelderAllowance extends HelderRenderableData{
   int id;
 
   TextInfo textInfo;
   AllowanceKind kind;
-  num amount;
+  double amount;
   DateTime startDate;
   DateTime endDate;
 
@@ -37,8 +42,8 @@ class HelderAllowance extends HelderRenderableData{
     return HelderAllowance(
       id: map['Id'] as int? ?? -1,
       textInfo: textInfo,
-      kind: AllowanceKind.values.byName(map['AllowanceKind'] as String? ?? 'overigeToeslag'),
-      amount: map['Amount'] as num? ?? 0.0,
+      kind: AllowanceKind.values.byName(map['SpecificKind'] as String? ?? 'overigeToeslag'),
+      amount: double.tryParse(map['Amount']?.toString() ?? '') ?? 0.0,
       startDate: DateTime.parse(map['StartDate'] as String? ?? '1970-01-01'),
       endDate: DateTime.parse(map['EndDate'] as String? ?? '1970-01-01'),
     );
@@ -48,7 +53,7 @@ class HelderAllowance extends HelderRenderableData{
     return {
       'Id': id,
       'TextInfo': textInfo.toMap(),
-      'AllowanceKind': kind.name,
+      'SpecificKind': kind.name,
       'Amount': amount,
       'StartDate': startDate.toIso8601String(),
       'EndDate': endDate.toIso8601String(),
@@ -56,8 +61,71 @@ class HelderAllowance extends HelderRenderableData{
   }
 
   @override
-  int getId() {
-    return id;
+  int getId() => id;
+  
+  @override
+  TextInfo getTextInfo() => textInfo;
+
+  @override
+  bool isRecievingMoney() => true;
+
+  @override
+  bool getIsPayed() => true;
+
+  @override
+  HelderRemissionText getRemissionText() {
+    return const HelderRemissionText(
+      remissionText: <TextSpan> [
+        //Empty, Allowance's dont have remissions.
+        //Maybe this could house some other informatic text.
+      ]
+    );
+  }
+
+  @override
+  Widget getPaymentScreenInfoBlock() {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          
+          const Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: Text(
+              TTexts.benefitsReminderText,
+              style: HelderText.breadStyle
+            ),
+          ),
+      
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Text(
+                textAlign: TextAlign.center,
+                TTexts.allowanceBottomInfo(amount), 
+                style: HelderText.remissionStyle,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Paymentcard toPaymentCard() {
+    return Paymentcard(
+      helderData: this,
+
+      amount: amount.toString(),
+      letterSource: textInfo.sender,
+
+      paymentDate: startDate,
+      paymentEndDate: endDate,
+
+      isRecievingMoney: true,
+    );
   }
 
   @override
@@ -77,35 +145,5 @@ class HelderAllowance extends HelderRenderableData{
   @override
   Future<void> markAsNotPayed(DatabaseService databaseService) async {
     log("Allowanaces cant be payed!");
-  }
-
-  @override
-  String getSubject() {
-    return kind.kindName;
-  }
-
-  @override
-  String getFullText() {
-    return textInfo.content;
-  }
-
-  @override
-  String getSimplifiedContent() {
-    return textInfo.simplifiedContent;
-  }
-
-  @override
-  Paymentcard toPaymentCard() {
-    return Paymentcard(
-      helderData: this,
-
-      amount: amount.toString(),
-      letterSource: kind.kindName, //TODO: Get source from TextInfo when added!
-
-      paymentDate: startDate,
-      paymentEndDate: endDate,
-
-      isRecievingMoney: true,
-    );
   }
 }

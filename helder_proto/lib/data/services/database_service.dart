@@ -18,19 +18,17 @@ class DatabaseService {
   final String _textInfoIdColumnName = 'Id';
   final String _textInfoContentColumnName = 'Content';
   final String _textInfoSimplifiedContentColumnName = 'SimplifiedContent';
+  final String _textInfoSenderColumnName = 'Sender';
+  final String _textInfoSubjectColumnName = 'Subject';
 
   final String _letterTableName = 'Letter';
   final String _letterIdColumnName = 'Id';
   final String _letterTextInfoIdColumnName = 'TextInfoId';
-  final String _letterSenderColumnName = 'Sender';
-  final String _letterSubjectColumnName = 'Subject';
 
   final String _invoiceTableName = 'Invoice';
   final String _invoiceIdColumnName = 'Id';
   final String _invoiceTextInfoIdColumnName = 'TextInfoId';
-  final String _invoiceInvoiceKindColumnName = 'InvoiceKind';
-  final String _invoiceSenderColumnName = 'Sender';
-  final String _invoiceSubjectColumnName = 'Subject';
+  final String _invoiceInvoiceKindColumnName = 'SpecificKind';
   final String _invoiceAmountColumnName = 'Amount';
   final String _invoicePaymentDeadlineColumnName = 'PaymentDeadline';
   final String _invoiceIsPayedDateColumnName = 'IsPayedDate';
@@ -39,7 +37,7 @@ class DatabaseService {
   final String _taxTableName = 'Tax';
   final String _taxIdColumnName = 'Id';
   final String _taxTextInfoIdColumnName = 'TextInfoId';
-  final String _taxTaxKindColumnName = 'TaxKind';
+  final String _taxTaxKindColumnName = 'SpecificKind';
   final String _taxAmountColumnName = 'Amount';
   final String _taxPaymentDeadlineColumnName = 'PaymentDeadline';
   final String _taxIsPayedDateColumnName = 'IsPayedDate';
@@ -48,7 +46,7 @@ class DatabaseService {
   final String _allowanceTableName = 'Allowance';
   final String _allowanceIdColumnName = 'Id';
   final String _allowanceTextInfoIdColumnName = 'TextInfoId';
-  final String _allowanceAllowanceKindColumnName = 'AllowanceKind';
+  final String _allowanceAllowanceKindColumnName = 'SpecificKind';
   final String _allowanceAmountColumnName = 'Amount';
   final String _allowanceStartDateColumnName = 'StartDate';
   final String _allowanceEndDateColumnName = 'EndDate';
@@ -70,7 +68,9 @@ class DatabaseService {
           CREATE TABLE $_textInfoTableName (
             $_textInfoIdColumnName INTEGER PRIMARY KEY,
             $_textInfoContentColumnName TEXT NOT NULL,
-            $_textInfoSimplifiedContentColumnName TEXT NOT NULL
+            $_textInfoSimplifiedContentColumnName TEXT NOT NULL,
+            $_textInfoSenderColumnName TEXT NOT NULL,
+            $_textInfoSubjectColumnName TEXT NOT NULL
           );
         ''');
 
@@ -78,8 +78,6 @@ class DatabaseService {
           CREATE TABLE $_letterTableName (
             $_letterIdColumnName INTEGER PRIMARY KEY,
             $_letterTextInfoIdColumnName INTEGER NOT NULL,
-            $_letterSenderColumnName TEXT NOT NULL,
-            $_letterSubjectColumnName TEXT NOT NULL,
 
             FOREIGN KEY ($_letterTextInfoIdColumnName) REFERENCES $_textInfoTableName ($_textInfoIdColumnName)
           );
@@ -90,8 +88,6 @@ class DatabaseService {
             $_invoiceIdColumnName INTEGER PRIMARY KEY,
             $_invoiceTextInfoIdColumnName INTEGER NOT NULL,
             $_invoiceInvoiceKindColumnName TEXT NOT NULL,
-            $_invoiceSenderColumnName TEXT NOT NULL,
-            $_invoiceSubjectColumnName TEXT NOT NULL,
             $_invoiceAmountColumnName NUM NOT NULL,
             $_invoicePaymentDeadlineColumnName TEXT NOT NULL,
             $_invoiceIsPayedDateColumnName TEXT,
@@ -177,8 +173,6 @@ class DatabaseService {
       _letterTableName,
       {
         _letterTextInfoIdColumnName: textInfoId,
-        _letterSenderColumnName: letter.sender,
-        _letterSubjectColumnName: letter.subject,
       },
     );
   }
@@ -196,8 +190,6 @@ class DatabaseService {
       letters.add(
         HelderLetter(
           textInfo: textInfo,
-          sender: letter[_letterSenderColumnName] as String,
-          subject: letter[_letterSubjectColumnName] as String,
           kind: LetterKind.values.byName(letter['kind'] as String? ?? 'regular'),
         ),
       );
@@ -223,8 +215,6 @@ class DatabaseService {
 
       return HelderLetter(
         textInfo: textInfo,
-        sender: letter[_letterSenderColumnName] as String,
-        subject: letter[_letterSubjectColumnName] as String,
         kind: LetterKind.values.byName(letter['kind'] as String? ?? 'regular'),
       );
     }
@@ -243,10 +233,9 @@ class DatabaseService {
       {
         _invoiceTextInfoIdColumnName: textInfoId,
         _invoiceInvoiceKindColumnName: invoice.kind.name,
-        _invoiceSenderColumnName: invoice.sender,
-        _invoiceSubjectColumnName: invoice.subject,
         _invoiceAmountColumnName: invoice.amount,
         _invoicePaymentDeadlineColumnName: invoice.paymentDeadline.toIso8601String(),
+        _invoiceIsPayedDateColumnName: invoice.isPayedDate?.toIso8601String() ?? '',
         _invoiceIsPayedColumnName: invoice.isPayed ? 1 : 0,
       },
     );
@@ -304,8 +293,6 @@ class DatabaseService {
       _invoiceTableName,
       {
         _invoiceInvoiceKindColumnName: invoice.kind.name,
-        _invoiceSenderColumnName: invoice.sender,
-        _invoiceSubjectColumnName: invoice.subject,
         _invoiceAmountColumnName: invoice.amount,
         _invoicePaymentDeadlineColumnName: invoice.paymentDeadline.toIso8601String(),
         _invoiceIsPayedDateColumnName: invoice.isPayedDate!.toIso8601String(),
@@ -329,6 +316,7 @@ class DatabaseService {
         _taxTaxKindColumnName: tax.kind.name,
         _taxAmountColumnName: tax.amount,
         _taxPaymentDeadlineColumnName: tax.paymentDeadline.toIso8601String(),
+        _taxIsPayedDateColumnName: tax.isPayedDate?.toIso8601String() ?? '',
         _taxIsPayedColumnName: tax.isPayed ? 1 : 0,
       },
     );
@@ -445,14 +433,7 @@ class DatabaseService {
       int textInfoId = allowance[_allowanceTextInfoIdColumnName] as int;
       TextInfo textInfo = await getTextInfo(textInfoId);
 
-      return HelderAllowance(
-        id: allowanceId,
-        textInfo: textInfo,
-        kind: AllowanceKind.values.byName(allowance['AllowanceKind'] as String? ?? 'travel'),
-        amount: allowance[_allowanceAmountColumnName] as num,
-        startDate: DateTime.parse(allowance[_allowanceStartDateColumnName] as String),
-        endDate: DateTime.parse(allowance[_allowanceEndDateColumnName] as String),
-      );
+      return HelderAllowance.fromMap(allowance, textInfo);
     }
 
     return HelderAllowance.empty();

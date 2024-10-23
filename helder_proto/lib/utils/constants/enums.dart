@@ -40,12 +40,13 @@ enum InvoiceKind {
 
 Map<String, dynamic> invoiceKindToJson() {
   return {
-    "Factuur": TaxKind.values.map((e) => e.toString().split('.').last).toList(),
+    "Factuur": InvoiceKind.values.map((e) => e.toString().split('.').last).toList(),
   };
 }
 
 enum TaxKind {
-  inkomstenBelasting('Inkomstenbelasting'),
+  inkomstenBelastingBetalen('Inkomstenbelasting betalen'),
+  inkomstenBelastingOntvangen('Inkomstenbelasting ontvagen'),
   omzetBelasting('Omzetbelasting'),
   overigeBelasting('Overige belasting');
 

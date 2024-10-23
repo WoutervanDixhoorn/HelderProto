@@ -33,7 +33,7 @@ class PaymentScreen extends StatelessWidget {
         
         paymentCard: helderData.toPaymentCard(),
 
-        infoBlock: getInfoBlock(),
+        infoBlock: helderData.getPaymentScreenInfoBlock(),
 
         paymentButtons: getPayOptionBlock(context),
 
@@ -42,42 +42,19 @@ class PaymentScreen extends StatelessWidget {
     
   }
 
-  Widget getInfoBlock() {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-      
-          const Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Text(
-              TTexts.canYouPayNowText,
-              style: HelderText.breadStyle
-            ),
-          ),
-      
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Text(
-              textAlign: TextAlign.center,
-              TTexts.dontNeedToPayToday('19 juni'), //TODO: Add paydate to HelderRenerableData
-              style: HelderText.remissionStyle,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-  
   Widget getPayOptionBlock(BuildContext context) {
     NavigationProvider navigationProvider = Provider.of<NavigationProvider>(context, listen: false); 
 
-    if (helderData is! HelderInvoice && helderData is! HelderTax) {
-      return HelderBigButton(
-        margin: const EdgeInsets.only(bottom: 20),
-        text: "Oke",
-        onPressed: () => paymentController.onAllowanceOkay(navigationProvider),
+    if (helderData.isRecievingMoney() || helderData.getIsPayed()) {
+      return Center(
+        child: SizedBox(
+          width: 240,
+          height: 50,
+          child: HelderBigButton(
+            text: "Oke",
+            onPressed: () => paymentController.onReviecvingOkay(navigationProvider),
+          ),
+        ),
       );
     }
 
@@ -94,16 +71,22 @@ class PaymentScreen extends StatelessWidget {
           ),
         ),
 
-        HelderBigButton(
-          margin: const EdgeInsets.only(top: 20, bottom: 10),
-          text: "Nog even niet",
-          onPressed: () => paymentController.onPayLater(navigationProvider)
+        SizedBox(
+          width: 240,
+          height: 50,
+          child: HelderBigButton(
+            text: "Nog even niet",
+            onPressed: () => paymentController.onPayLater(navigationProvider)
+          ),
         ),
 
-        HelderBigButton(
-          margin: const EdgeInsets.only(bottom: 20),
-          text: "Meteen",
-          onPressed: () => paymentController.onPayNow(navigationProvider)
+        SizedBox(
+          width: 240,
+          height: 50,
+          child: HelderBigButton(
+            text: "Meteen",
+            onPressed: () => paymentController.onPayNow(navigationProvider)
+          ),
         ),
 
       ],

@@ -1,9 +1,11 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:helder_proto/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'package:helder_proto/features/scanner/camera_provider.dart';
+import 'package:helder_proto/common/shapes/rouded_corner_border_camera.dart';
+import 'package:helder_proto/providers/navigation_provider.dart';
+import 'package:helder_proto/utils/constants/colors.dart';
+import 'package:helder_proto/providers/camera_provider.dart';
 import 'package:helder_proto/common/widgets/helder_buttons.dart';
 
 class ScannerScreen extends StatelessWidget {
@@ -79,20 +81,56 @@ class _ScannerCameraViewState extends State<ScannerCameraView> {
             ),
             Align(
               alignment: Alignment.bottomCenter,
-              child: HelderScanButton(
-                onPressed: () async {
-                  XFile? pictureFile = await provider.takePicture();
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  
+                  const RoundedCornerBorderContainer(),
 
-                  if (!mounted) return;
+                  //Padding
+                  const SizedBox(
+                    height: 30
+                  ),
 
-                  if(pictureFile != null){
-                    // ignore: use_build_context_synchronously
-                    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
-                    navigationProvider.setResultScreen(pictureFile);
-                  }
-                },
+                  Container(
+                    width: 150,
+                    height: 25,
+                    decoration: BoxDecoration(
+                      color: HelderColors.darkGrey,
+                      borderRadius: BorderRadius.circular(20)
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'scan de brief',
+                        style: TextStyle(
+                          color: HelderColors.white
+                        ),
+                      ),
+                    ),
+                  ),
+              
+                  //BUTTON
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5, top: 15),
+                    child: HelderScanButton(
+                      onPressed: () async {
+                        XFile? pictureFile = await provider.takePicture();
+                    
+                        if (!mounted) return;
+                    
+                        if(pictureFile != null){
+                          // ignore: use_build_context_synchronously
+                          final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+                          navigationProvider.setResultScreen(pictureFile);
+                        }
+                      },
+                    ),
+                  ),
+              
+                ],
               ),
             ),
+
           ],
         );
       }

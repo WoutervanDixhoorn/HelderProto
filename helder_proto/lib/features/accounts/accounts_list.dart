@@ -51,23 +51,28 @@ class AccountsList extends StatelessWidget {
     List<HelderAllowance> allowances = await databaseService.getAllowances();
     List<HelderTax> taxes = await databaseService.getTaxes();
     
-    // Combine all data into one list of RenderableData
     List<HelderRenderableData> allData = [...invoices,...allowances,...taxes];
 
     for (var data in allData) {
-      // Check the 'isPayed' condition where applicable (only applies to invoices and taxes)
-      if (data is HelderInvoice && data.isPayed != payedAccounts) continue;
-      if (data is HelderTax && data.isPayed != payedAccounts) continue;
-      if(data is HelderAllowance && !payedAccounts) continue;
-      // Add the payment card to the list using the toPaymentCard method
+      
+      if (data.isRecievingMoney()) {
+        if (!payedAccounts) continue;
+      }
+
+      if ((data is HelderInvoice && data.isPayed != payedAccounts) ||
+          (data is HelderTax && data.isPayed != payedAccounts)) {
+        continue;
+      }
+
       paymentCards.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 30),
-          child: data.toPaymentCard(), // Use the method defined in RenderableData
-        )
+          child: data.toPaymentCard(),
+        ),
       );
-    }
+    } 	
 
     return paymentCards;
   }
+
 }

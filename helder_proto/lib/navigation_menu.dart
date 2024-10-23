@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:helder_proto/utils/constants/colors.dart';
 import 'package:helder_proto/providers/verhelder_provider.dart';
-import 'package:helder_proto/features/scanner/camera_provider.dart';
+import 'package:helder_proto/providers/camera_provider.dart';
 
 class NavBarItem extends StatelessWidget {
   final String iconPath;
@@ -47,11 +47,7 @@ class NavigationMenu extends StatelessWidget {
       child: Scaffold(
         bottomNavigationBar: Consumer<NavigationProvider>(
           builder: (context, provider, child ) => ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24.0),
-              topRight: Radius.circular(24.0),
-            ),
-
+            
             child: NavigationBar(
               backgroundColor: HelderColors.darkGrey,
               height: 100,
@@ -73,6 +69,7 @@ class NavigationMenu extends StatelessWidget {
                 ),
               ],
             ),
+            
           ),
         ),
         body: Consumer<NavigationProvider>(
